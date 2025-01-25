@@ -21,7 +21,7 @@ const connectMongoDB = async () => {
       console.error('MongoDB reconnection failed.');
     });
   } catch (error) {
-    console.log('Could not connect to MongoDB.', error);
+    console.log('Error connecting to MongoDB.', error);
     process.exit(1);
   }
 };
