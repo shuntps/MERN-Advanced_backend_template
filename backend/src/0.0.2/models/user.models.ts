@@ -2,37 +2,26 @@ import mongoose from 'mongoose';
 
 import { hashValue, compareValue } from '../utils/bcrypt';
 
-import AuthProviderType from '../constants/authProviderType';
+import {
+  IpAddress,
+  UserDocument,
+  UserPreferences,
+} from '../@types/models/user';
 
-export interface UserDocument extends mongoose.Document {
-  name: string;
-  email: string;
-  password: string;
-  verified: boolean;
-  provider: AuthProviderType;
-  lastLogin: Date;
-  ipAddresses: { ip: string; updatedAt: Date }[];
-  createdAt: Date;
-  updatedAt: Date;
-  __v: number;
-  comparePassword: (val: string) => Promise<boolean>;
-  omit(): Pick<
-    UserDocument,
-    | '_id'
-    | 'name'
-    | 'email'
-    | 'verified'
-    | 'provider'
-    | 'createdAt'
-    | 'updatedAt'
-    | '__v'
-  >;
-}
-
-const ipAddressSchema = new mongoose.Schema(
+const ipAddressSchema = new mongoose.Schema<IpAddress>(
   {
     ip: { type: String },
+    createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const userPreferencesSchema = new mongoose.Schema<UserPreferences>(
+  {
+    enable2FA: { type: Boolean, default: false },
+    emailNotification: { type: Boolean, default: true },
+    twoFactorSecret: { type: String, required: false },
   },
   { _id: false }
 );
@@ -46,21 +35,31 @@ const userSchema = new mongoose.Schema<UserDocument>(
     provider: { type: String, required: true },
     lastLogin: { type: Date, required: true, default: Date.now },
     ipAddresses: { type: [ipAddressSchema], required: true, default: [] },
+    userPreferences: { type: userPreferencesSchema, default: {} },
   },
   {
     timestamps: true,
   }
 );
 
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  this.password = await hashValue(this.password);
-  next();
+userSchema.pre('save', async function () {
+  if (this.isModified('password')) {
+    this.password = await hashValue(this.password);
+  }
 });
 
 userSchema.methods.comparePassword = function (val: string) {
   return compareValue(val, this.password);
 };
+
+userSchema.set('toJSON', {
+  transform: function (doc, ret) {
+    delete ret.password;
+    delete ret.ipAddresses;
+    delete ret.userPreferences.twoFactorSecret;
+    return ret;
+  },
+});
 
 userSchema.methods.omit = function () {
   const user = this.toObject();

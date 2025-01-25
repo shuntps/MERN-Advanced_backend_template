@@ -1,23 +1,26 @@
 import mongoose from 'mongoose';
 
+import { SessionDocument } from '../@types/models/session';
+
 import { userSessionExpiresIn } from '../utils/date';
 
-export interface SessionDocument extends mongoose.Document {
-  userId: mongoose.Types.ObjectId;
-  userAgent?: string;
-  ipAdrresse?: string;
-  createdAt: Date;
-  expiresAt: Date;
-}
-
 const sessionSchema = new mongoose.Schema<SessionDocument>({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User',
+    index: true,
+  },
   userAgent: { type: String },
   ipAdrresse: { type: String },
-  createdAt: { type: Date, required: true, default: Date.now },
-  expiresAt: { type: Date, default: userSessionExpiresIn },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, required: true, default: userSessionExpiresIn },
 });
 
-const SessionModel = mongoose.model<SessionDocument>('Session', sessionSchema, 'sessions');
+const SessionModel = mongoose.model<SessionDocument>(
+  'Session',
+  sessionSchema,
+  'sessions'
+);
 
 export default SessionModel;

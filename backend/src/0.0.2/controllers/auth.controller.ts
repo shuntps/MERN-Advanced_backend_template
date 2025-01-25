@@ -28,13 +28,13 @@ import {
 } from '../schemas/auth.schema';
 
 export const registerHandler = asyncHandler(async (req, res) => {
-  const request = registerSchema.parse({
+  const registerData = registerSchema.parse({
     ...req.body,
     ip: req.ip,
     userAgent: req.headers['user-agent'],
   });
 
-  const { user, refreshToken, accessToken } = await register(request);
+  const { user, refreshToken, accessToken } = await register(registerData);
 
   return setAuthCookies({ res, accessToken, refreshToken })
     .status(CREATED)

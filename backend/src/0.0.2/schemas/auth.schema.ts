@@ -1,11 +1,10 @@
 import { z } from 'zod';
 
-const nameSchema = z.string().min(1).max(100);
-export const emailSchema = z.string().email().min(1).max(100);
-const passwordSchema = z.string().min(8).max(100);
-const confirmPasswordSchema = z.string().min(8).max(100);
-const userAgentSchema = z.string().optional();
-const ipSchema = z.string().ip();
+export const nameSchema = z.string().trim().min(1).max(100);
+export const emailSchema = z.string().trim().email().min(1).max(100);
+export const passwordSchema = z.string().trim().min(8).max(100);
+export const userAgentSchema = z.string().optional();
+export const ipSchema = z.string().ip();
 
 export const loginSchema = z.object({
   email: emailSchema,
@@ -17,10 +16,10 @@ export const loginSchema = z.object({
 export const registerSchema = loginSchema
   .extend({
     name: nameSchema,
-    confirmPassword: confirmPasswordSchema,
+    confirmPassword: passwordSchema,
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
+  .refine((val) => val.password === val.confirmPassword, {
+    message: 'Passwords must match. Please try again.',
     path: ['confirmPassword'],
   });
 

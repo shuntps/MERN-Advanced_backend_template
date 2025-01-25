@@ -7,8 +7,8 @@ import {
   JWT_REFRESH_TOKEN_SECRET,
 } from '../constants/env';
 
-import { SessionDocument } from '../models/session.model';
-import { UserDocument } from '../models/user.models';
+import { UserDocument } from '../@types/models/user';
+import { SessionDocument } from '../@types/models/session';
 
 export type RefreshTokenPayload = {
   sessionId: SessionDocument['_id'];
