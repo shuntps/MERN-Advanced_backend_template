@@ -1,4 +1,3 @@
-`````markdown
 # MERN-Advanced_backend_template
 
 This is the backend of a MERN authentication application, developed with Express.js and TypeScript. It handles user authentication using JWT, password hashing, and other essential features for secure user management.
@@ -24,12 +23,11 @@ This is the backend of a MERN authentication application, developed with Express
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/shuntps/MERN-Advanced_backend_template.git
    cd backend
    ```
-
-````/
 
 2. Install dependencies:
 
@@ -97,5 +95,3 @@ This project is licensed under the Apache-2.0 License. See the [LICENSE](LICENSE
 ## Author
 
 Developed by **SHT Labs**.
-````
-`````
