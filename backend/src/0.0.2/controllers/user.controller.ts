@@ -1,7 +1,7 @@
 import { NOT_FOUND, OK } from '../constants/http';
 
 import appAssert from '../utils/appAssert';
-import asyncHandler from '../utils/asyncHandler';
+import asyncHandler from '../middlewares/asyncHandler';
 
 import UserModel from '../models/user.models';
 

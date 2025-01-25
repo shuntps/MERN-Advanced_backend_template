@@ -8,6 +8,7 @@ class AppError extends Error {
     public errorCode?: AppErrorCode
   ) {
     super(message);
+    Error.captureStackTrace(this, this.constructor);
   }
 }
 

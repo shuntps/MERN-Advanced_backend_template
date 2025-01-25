@@ -1,4 +1,4 @@
-import asyncHandler from '../utils/asyncHandler';
+import asyncHandler from '../middlewares/asyncHandler';
 import {
   clearAuthCookies,
   getAccessTokenCookieOptions,

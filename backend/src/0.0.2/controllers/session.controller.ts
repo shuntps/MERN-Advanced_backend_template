@@ -5,7 +5,7 @@ import { NOT_FOUND, OK } from '../constants/http';
 import SessionModel from '../models/session.model';
 
 import appAssert from '../utils/appAssert';
-import asyncHandler from '../utils/asyncHandler';
+import asyncHandler from '../middlewares/asyncHandler';
 
 export const getSessionsHandler = asyncHandler(async (req, res) => {
   const sessions = await SessionModel.find(
