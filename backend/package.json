@@ -3,8 +3,9 @@
   "version": "0.0.2",
   "main": "src/0.0.2/index.ts",
   "scripts": {
-    "dev0.0.1": "ts-node-dev --files src/0.0.1/index.ts",
-    "dev0.0.2": "ts-node-dev --files src/0.0.2/index.ts"
+    "dev": "ts-node-dev --files src/0.0.2/index.ts",
+    "build": "tsc && cp ./package.json ./dist",
+    "start": "node dist/0.0.2/index.js"
   },
   "keywords": [],
   "author": "SHT Labs",
