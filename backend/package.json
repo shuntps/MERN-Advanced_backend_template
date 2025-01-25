@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "0.0.2",
-  "main": "src/index.ts",
+  "main": "src/0.0.2/index.ts",
   "scripts": {
     "dev0.0.1": "ts-node-dev --files src/0.0.1/index.ts",
     "dev0.0.2": "ts-node-dev --files src/0.0.2/index.ts"
