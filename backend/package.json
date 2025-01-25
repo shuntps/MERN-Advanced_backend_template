@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "SHT Labs",
   "license": "Apache-2.0",
-  "description": "MERN Authentication app with jwt",
+  "description": "MERN-Advanced_backend_template",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
