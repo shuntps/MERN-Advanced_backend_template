@@ -1,10 +1,10 @@
 import { CookieOptions, Response } from 'express';
 
-import { NODE_ENV } from '../constants/env';
+import { BASE_PATH, NODE_ENV } from '../constants/env';
 
 import { accessCookieExpiresIn, refreshCookieExpiresIn } from './date';
 
-export const REFRESH_PATH = '/api/auth/refresh';
+export const REFRESH_PATH = `${BASE_PATH}/auth/refresh`;
 
 const defaults: CookieOptions = {
   sameSite: 'strict',

@@ -1,16 +1,9 @@
-const getEnv = (key: string, defaultValue?: string): string => {
-  const value = process.env[key] || defaultValue;
-
-  if (value === undefined) {
-    throw Error(`Missing String environment variable for ${key}`);
-  }
-
-  return value;
-};
+import getEnv from '../utils/getEnv';
 
 // Environment settings
 export const NODE_ENV = getEnv('NODE_ENV');
-export const BACKEND_PORT = getEnv('BACKEND_PORT');
+export const PORT = getEnv('PORT');
+export const BASE_PATH = getEnv('BASE_PATH');
 
 // Database configuration
 export const MONGODB_URI = getEnv('MONGODB_URI');
