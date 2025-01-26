@@ -22,7 +22,7 @@ import {
 import {
   authVerificationCodeExpiresIn,
   fiveMinutesAgo,
-  ONE_DAY_MS,
+  ONE_DAY_IN_MS,
   passwordResetCodeExpiresIn,
   userSessionExpiresIn,
 } from '../utils/date';
@@ -123,8 +123,8 @@ export const login = async (loginData: LoginDTO) => {
   });
 
   const sessionId = session._id;
-  const refreshToken = signToken({ sessionId }, refreshTokenSignOptions);
   const accessToken = signToken({ userId, sessionId });
+  const refreshToken = signToken({ sessionId }, refreshTokenSignOptions);
 
   return { user: user.omit(), accessToken, refreshToken, mfaRequired: false };
 };
@@ -140,35 +140,36 @@ export const refreshAccessToken = async (refreshToken: string) => {
   const { payload } = verifyToken<RefreshTokenPayload>(refreshToken, {
     secret: refreshTokenSignOptions.secret,
   });
-  appAssert(payload, UNAUTHORIZED, 'Invalid refresh token.');
+  appAssert(
+    payload,
+    UNAUTHORIZED,
+    'Session expired or invalid. Please log in again.',
+    AppErrorCode.AuthSessionExpired
+  );
 
   const session = await SessionModel.findById(payload.sessionId);
+
   const now = Date.now();
   appAssert(
     session && session.expiresAt.getTime() > now,
     UNAUTHORIZED,
-    'Session expired.'
+    'Session expired or invalid. Please log in again.'
   );
 
-  const sessionNeedsRefresh = session.expiresAt.getTime() - now <= ONE_DAY_MS;
-  if (sessionNeedsRefresh) {
+  const userId = session.userId;
+  const sessionId = session._id;
+
+  const sessionNeedRefresh = session.expiresAt.getTime() - now <= ONE_DAY_IN_MS;
+  if (sessionNeedRefresh) {
     session.expiresAt = userSessionExpiresIn();
     await session.save();
   }
 
-  const newRefreshToken = sessionNeedsRefresh
-    ? signToken(
-        {
-          sessionId: session._id,
-        },
-        refreshTokenSignOptions
-      )
+  const newRefreshToken = sessionNeedRefresh
+    ? signToken({ sessionId }, refreshTokenSignOptions)
     : undefined;
 
-  const accessToken = signToken({
-    userId: session.userId,
-    sessionId: session._id,
-  });
+  const accessToken = signToken({ userId, sessionId });
 
   return { accessToken, newRefreshToken };
 };

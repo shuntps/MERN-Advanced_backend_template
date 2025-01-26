@@ -18,6 +18,7 @@ import {
 } from '../services/auth.service';
 
 import { CREATED, OK, UNAUTHORIZED } from '../constants/http';
+import AppErrorCode from '../constants/appErrorCode';
 
 import {
   emailSchema,
@@ -69,7 +70,12 @@ export const logoutHandler = asyncHandler(async (req, res) => {
 
 export const refreshHandler = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken as string | undefined;
-  appAssert(refreshToken, UNAUTHORIZED, 'Unauthorized');
+  appAssert(
+    refreshToken,
+    UNAUTHORIZED,
+    'Session expired or invalid. Please log in again.',
+    AppErrorCode.AuthSessionExpired
+  );
 
   const { accessToken, newRefreshToken } = await refreshAccessToken(
     refreshToken
@@ -82,7 +88,7 @@ export const refreshHandler = asyncHandler(async (req, res) => {
   return res
     .status(OK)
     .cookie('accessToken', accessToken, getAccessTokenCookieOptions())
-    .json({ message: 'Access token refreshed' });
+    .json({ message: 'Your session has been successfully renewed.' });
 });
 
 export const verifyEmailHandler = asyncHandler(async (req, res) => {
