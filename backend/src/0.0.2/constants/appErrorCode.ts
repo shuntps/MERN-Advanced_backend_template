@@ -1,4 +1,5 @@
 const enum AppErrorCode {
+  AuthEmailAlreadyExists = 'AuthEmailAlreadyExists',
   InvalidAccessToken = 'InvalidAccessToken',
 }
 

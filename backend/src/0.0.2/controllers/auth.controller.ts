@@ -31,14 +31,13 @@ export const registerHandler = asyncHandler(async (req, res) => {
   const registerData = registerSchema.parse({
     ...req.body,
     ip: req.ip,
-    userAgent: req.headers['user-agent'],
   });
 
-  const { user, refreshToken, accessToken } = await register(registerData);
+  const { user } = await register(registerData);
 
-  return setAuthCookies({ res, accessToken, refreshToken })
+  return res
     .status(CREATED)
-    .json(user);
+    .json({ message: 'User created successfully.', user });
 });
 
 export const loginHandler = asyncHandler(async (req, res) => {

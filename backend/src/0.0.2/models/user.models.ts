@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+import AuthProviderType from '../constants/authProviderType';
+
 import { hashValue, compareValue } from '../utils/bcrypt';
 
 import {
@@ -21,7 +23,7 @@ const userPreferencesSchema = new mongoose.Schema<UserPreferences>(
   {
     enable2FA: { type: Boolean, default: false },
     emailNotification: { type: Boolean, default: true },
-    twoFactorSecret: { type: String, required: false },
+    twoFactorSecret: { type: String },
   },
   { _id: false }
 );
@@ -32,8 +34,8 @@ const userSchema = new mongoose.Schema<UserDocument>(
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     verified: { type: Boolean, required: true, default: false },
-    provider: { type: String, required: true },
-    lastLogin: { type: Date, required: true, default: Date.now },
+    provider: { type: String, required: true, default: AuthProviderType.Email },
+    lastLogin: { type: Date },
     ipAddresses: { type: [ipAddressSchema], required: true, default: [] },
     userPreferences: { type: userPreferencesSchema, default: {} },
   },

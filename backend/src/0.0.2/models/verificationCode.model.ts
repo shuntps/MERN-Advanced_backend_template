@@ -1,13 +1,6 @@
 import mongoose from 'mongoose';
 
-import VerificationCodeType from '../constants/verificationCodeType';
-
-export interface VerificationCodeDocument extends mongoose.Document {
-  userId: mongoose.Types.ObjectId;
-  type: VerificationCodeType;
-  expiresAt: Date;
-  createdAt: Date;
-}
+import { VerificationCodeDocument } from '../@types/models/verificationCode';
 
 const verificationCodeSchema = new mongoose.Schema<VerificationCodeDocument>({
   userId: {
@@ -16,9 +9,10 @@ const verificationCodeSchema = new mongoose.Schema<VerificationCodeDocument>({
     required: true,
     index: true,
   },
+  code: { type: String, unique: true },
   type: { type: String, required: true },
   expiresAt: { type: Date, required: true },
-  createdAt: { type: Date, required: true, default: Date.now },
+  createdAt: { type: Date, default: Date.now },
 });
 
 const VerificationCodeModel = mongoose.model<VerificationCodeDocument>(

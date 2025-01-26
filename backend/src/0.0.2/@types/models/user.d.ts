@@ -20,7 +20,7 @@ export interface UserDocument extends Document {
   password: string;
   verified: boolean;
   provider: AuthProviderType;
-  lastLogin: Date;
+  lastLogin?: Date;
   ipAddresses: IpAddress[];
   userPreferences: UserPreferences;
   createdAt: Date;

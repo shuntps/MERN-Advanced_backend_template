@@ -1,5 +1,6 @@
 import AuthProviderType from '../constants/authProviderType';
-import VerificationCodeType from '../constants/verificationType';
+import VerificationCodeType from '../constants/verificationCodeType';
+import AppErrorCode from '../constants/appErrorCode';
 import { FRONTEND_URL } from '../constants/env';
 import {
   CONFLICT,
@@ -33,54 +34,46 @@ import {
 } from '../utils/jwt';
 
 import UserModel from '../models/user.models';
-import VerificationModel from '../models/verification.model';
 import SessionModel from '../models/session.model';
+import VerificationCodeModel from '../models/verificationCode.model';
 
 export const register = async (registerData: RegisterDTO) => {
-  const { name, email, password, userAgent, ip } = registerData;
+  const { name, email, password, ip } = registerData;
 
-  const existingUser = await UserModel.exists({ email });
-  appAssert(!existingUser, CONFLICT, 'User already exists');
+  const existingUser = await UserModel.findOne({ email });
+  appAssert(
+    !existingUser,
+    CONFLICT,
+    'User already exists with this email.',
+    AppErrorCode.AuthEmailAlreadyExists
+  );
 
-  let user = await UserModel.create({
+  const user = await UserModel.create({
     name: name,
     email: email,
     password: password,
-    provider: AuthProviderType.Email,
     ipAddresses: [{ ip: ip }],
   });
 
   const userId = user._id;
-  const verificationCode = await VerificationModel.create({
+
+  const verificationCode = await VerificationCodeModel.create({
     userId,
     type: VerificationCodeType.EmailVerification,
     expiresAt: authVerificationCodeExpiresIn(),
   });
 
+  // Send verification email
   const url = `${FRONTEND_URL}/email/verify/${verificationCode._id}`;
   const { error } = await sendMail({
     to: user.email,
     ...getVerifyEmailTemplate(url),
   });
-
   if (error) {
     console.log(error);
   }
 
-  user.lastLogin = new Date();
-  await user.save();
-
-  const session = await SessionModel.create({
-    userId,
-    userAgent: userAgent,
-    ipAdrresse: ip,
-  });
-
-  const sessionId = session._id;
-  const refreshToken = signToken({ sessionId }, refreshTokenSignOptions);
-  const accessToken = signToken({ userId, sessionId });
-
-  return { user: user.omit(), accessToken, refreshToken };
+  return { user: user.omit() };
 };
 
 export const login = async ({ email, password, userAgent, ip }: LoginDTO) => {
@@ -167,7 +160,7 @@ export const refreshAccessToken = async (refreshToken: string) => {
 };
 
 export const verifyEmail = async (code: string) => {
-  const validCode = await VerificationModel.findOne({
+  const validCode = await VerificationCodeModel.findOne({
     _id: code,
     type: VerificationCodeType.EmailVerification,
     expiresAt: { $gt: Date.now() },
@@ -183,6 +176,16 @@ export const verifyEmail = async (code: string) => {
 
   await validCode.deleteOne();
 
+  /*   const session = await SessionModel.create({
+    userId,
+    userAgent: userAgent,
+    ipAdrresse: ip,
+  }); */
+
+  /*   const sessionId = session._id;
+  const refreshToken = signToken({ sessionId }, refreshTokenSignOptions);
+  const accessToken = signToken({ userId, sessionId }); */
+
   return { user: updatedUser.omit() };
 };
 
@@ -193,7 +196,7 @@ export const sendPasswordReset = async (email: string) => {
   const userId = user._id;
 
   const fiveMinAgo = fiveMinutesAgo();
-  const count = await VerificationModel.countDocuments({
+  const count = await VerificationCodeModel.countDocuments({
     userId,
     type: VerificationCodeType.PasswordReset,
     createdAt: { $gt: fiveMinAgo },
@@ -205,7 +208,7 @@ export const sendPasswordReset = async (email: string) => {
   );
 
   const expiresAt = passwordResetCodeExpiresIn();
-  const verificationCode = await VerificationModel.create({
+  const verificationCode = await VerificationCodeModel.create({
     userId,
     type: VerificationCodeType.PasswordReset,
     expiresAt,
@@ -237,7 +240,7 @@ export const resetPassword = async ({
   password,
   verificationCode,
 }: ResetPasswordParams) => {
-  const validCode = await VerificationModel.findOne({
+  const validCode = await VerificationCodeModel.findOne({
     _id: verificationCode,
     type: VerificationCodeType.PasswordReset,
     expiresAt: { $gt: new Date() },
