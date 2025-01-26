@@ -17,6 +17,13 @@ const sessionSchema = new mongoose.Schema<SessionDocument>({
   expiresAt: { type: Date, required: true, default: userSessionExpiresIn },
 });
 
+sessionSchema.set('toJSON', {
+  transform: function (doc, ret) {
+    delete ret.ipAdrresse;
+    return ret;
+  },
+});
+
 const SessionModel = mongoose.model<SessionDocument>(
   'Session',
   sessionSchema,

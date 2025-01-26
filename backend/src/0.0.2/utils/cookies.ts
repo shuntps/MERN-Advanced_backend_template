@@ -7,9 +7,9 @@ import { accessCookieExpiresIn, refreshCookieExpiresIn } from './date';
 export const REFRESH_PATH = `${BASE_PATH}/auth/refresh`;
 
 const defaults: CookieOptions = {
-  sameSite: 'strict',
   httpOnly: true,
   secure: NODE_ENV !== 'development',
+  sameSite: NODE_ENV !== 'development' ? 'none' : 'strict',
 };
 
 export const getAccessTokenCookieOptions = (): CookieOptions => ({

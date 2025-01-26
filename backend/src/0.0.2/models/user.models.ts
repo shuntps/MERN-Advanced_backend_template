@@ -14,7 +14,7 @@ const ipAddressSchema = new mongoose.Schema<IpAddress>(
   {
     ip: { type: String },
     createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, required: true, default: Date.now },
   },
   { _id: false }
 );
@@ -35,8 +35,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
     password: { type: String, required: true },
     verified: { type: Boolean, required: true, default: false },
     provider: { type: String, required: true, default: AuthProviderType.Email },
-    lastLogin: { type: Date },
-    ipAddresses: { type: [ipAddressSchema], required: true, default: [] },
+    ipAddresses: { type: [ipAddressSchema], default: [] },
     userPreferences: { type: userPreferencesSchema, default: {} },
   },
   {

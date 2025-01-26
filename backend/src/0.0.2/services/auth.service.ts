@@ -65,6 +65,7 @@ export const register = async (registerData: RegisterDTO) => {
 
   // Send verification email
   const url = `${FRONTEND_URL}/email/verify/${verificationCode._id}`;
+
   const { error } = await sendMail({
     to: user.email,
     ...getVerifyEmailTemplate(url),
@@ -76,32 +77,45 @@ export const register = async (registerData: RegisterDTO) => {
   return { user: user.omit() };
 };
 
-export const login = async ({ email, password, userAgent, ip }: LoginDTO) => {
+export const login = async (loginData: LoginDTO) => {
+  const { email, password, userAgent, ip } = loginData;
+
   let user = await UserModel.findOne({ email });
-  appAssert(user, UNAUTHORIZED, 'Invalid email or password.');
 
-  const isPasswordValid = await user.comparePassword(password);
-  appAssert(isPasswordValid, UNAUTHORIZED, 'Invalid email or password.');
-
-  const provider = user.provider;
   appAssert(
-    provider === AuthProviderType.Email,
+    user && user.provider === AuthProviderType.Email,
     UNAUTHORIZED,
-    'It looks like this email is already associated with another login method. Please sign in using the linked account to access your profile.'
+    'Invalid credentials or incorrect login provider.',
+    AppErrorCode.AuthInvalidCredentials
   );
 
-  user.ipAddresses = user.ipAddresses || [];
+  const isPasswordValid = await user.comparePassword(password);
+  appAssert(
+    isPasswordValid,
+    UNAUTHORIZED,
+    'Invalid credentials or incorrect login provider.',
+    AppErrorCode.AuthInvalidCredentials
+  );
+
+  appAssert(
+    user.verified,
+    UNAUTHORIZED,
+    'Email verification is required before logging in, please check your email.',
+    AppErrorCode.AuthEmailNotVerified
+  );
+
+  // TODO: Check if user enabled 2FA
+
   const existingIp = user.ipAddresses.find((entry) => entry.ip === ip);
+
   if (existingIp) {
     existingIp.updatedAt = new Date();
   } else {
-    user.ipAddresses.push({ ip, createdAt: new Date(), updatedAt: new Date() });
+    user.ipAddresses.push({ ip, updatedAt: new Date() });
   }
 
-  user.lastLogin = new Date();
-  await user.save();
-
   const userId = user._id;
+
   const session = await SessionModel.create({
     userId,
     userAgent,
@@ -112,7 +126,7 @@ export const login = async ({ email, password, userAgent, ip }: LoginDTO) => {
   const refreshToken = signToken({ sessionId }, refreshTokenSignOptions);
   const accessToken = signToken({ userId, sessionId });
 
-  return { user: user.omit(), accessToken, refreshToken };
+  return { user: user.omit(), accessToken, refreshToken, mfaRequired: false };
 };
 
 export const logout = async (accessToken: string) => {

@@ -4,7 +4,7 @@ import AuthProviderType from '../../constants/authProviderType';
 
 export interface IpAddress {
   ip: string;
-  createdAt: Date;
+  createdAt?: Date;
   updatedAt: Date;
 }
 
@@ -20,7 +20,6 @@ export interface UserDocument extends Document {
   password: string;
   verified: boolean;
   provider: AuthProviderType;
-  lastLogin?: Date;
   ipAddresses: IpAddress[];
   userPreferences: UserPreferences;
   createdAt: Date;

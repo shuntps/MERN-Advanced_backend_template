@@ -41,17 +41,19 @@ export const registerHandler = asyncHandler(async (req, res) => {
 });
 
 export const loginHandler = asyncHandler(async (req, res) => {
-  const request = loginSchema.parse({
+  const loginData = loginSchema.parse({
     ...req.body,
     ip: req.ip,
     userAgent: req.headers['user-agent'],
   });
 
-  const { refreshToken, accessToken } = await login(request);
+  const { user, refreshToken, accessToken, mfaRequired } = await login(
+    loginData
+  );
 
   return setAuthCookies({ res, accessToken, refreshToken })
     .status(OK)
-    .json({ message: 'Login successful.' });
+    .json({ message: "Welcome back! You're now logged in.", user });
 });
 
 export const logoutHandler = asyncHandler(async (req, res) => {
