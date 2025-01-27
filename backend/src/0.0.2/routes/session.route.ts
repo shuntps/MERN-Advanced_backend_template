@@ -7,7 +7,6 @@ import {
 
 const sessionRoutes = Router();
 
-// prefix: /api/sessions
 sessionRoutes.get('/', getSessionsHandler);
 sessionRoutes.delete('/:id', deleteSessionHandler);
 

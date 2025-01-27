@@ -12,7 +12,6 @@ import {
 
 const authRoutes = Router();
 
-// prefix: /api/auth
 authRoutes.post('/register', registerHandler);
 authRoutes.post('/login', loginHandler);
 authRoutes.get('/logout', logoutHandler);
