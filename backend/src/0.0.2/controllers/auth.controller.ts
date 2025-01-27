@@ -25,7 +25,7 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
-  verificationCodeSchema,
+  verificationEmailSchema,
 } from '../schemas/auth.schema';
 
 export const registerHandler = asyncHandler(async (req, res) => {
@@ -92,11 +92,13 @@ export const refreshHandler = asyncHandler(async (req, res) => {
 });
 
 export const verifyEmailHandler = asyncHandler(async (req, res) => {
-  const verificationCode = verificationCodeSchema.parse(req.params.code);
+  const { code } = verificationEmailSchema.parse(req.body);
 
-  await verifyEmail(verificationCode);
+  await verifyEmail(code);
 
-  return res.status(OK).json({ message: 'Email was successfully verified.' });
+  return res
+    .status(OK)
+    .json({ message: 'Your email has been successfully verified! ' });
 });
 
 export const sendPasswordResetHandler = asyncHandler(async (req, res) => {

@@ -10,15 +10,15 @@ import {
   UNAUTHORIZED,
 } from '../constants/http';
 
+import {
+  PasswordResetTemplate,
+  VerifyEmailTemplate,
+} from '../mailers/templates/emailTemplates';
+
 import { LoginDTO, RegisterDTO } from '../@types/services/auth';
 
-import { sendMail } from '../utils/sendMail';
 import { hashValue } from '../utils/bcrypt';
 import appAssert from '../utils/appAssert';
-import {
-  getPasswordResetTemplate,
-  getVerifyEmailTemplate,
-} from '../utils/emailTemplates';
 import {
   authVerificationCodeExpiresIn,
   fiveMinutesAgo,
@@ -32,6 +32,8 @@ import {
   signToken,
   verifyToken,
 } from '../utils/jwt';
+
+import { sendMail } from '../mailers/sendMail';
 
 import UserModel from '../models/user.models';
 import SessionModel from '../models/session.model';
@@ -57,18 +59,17 @@ export const register = async (registerData: RegisterDTO) => {
 
   const userId = user._id;
 
-  const verificationCode = await VerificationCodeModel.create({
+  const verification = await VerificationCodeModel.create({
     userId,
     type: VerificationCodeType.EmailVerification,
     expiresAt: authVerificationCodeExpiresIn(),
   });
 
   // Send verification email
-  const url = `${FRONTEND_URL}/email/verify/${verificationCode._id}`;
-
+  const url = `${FRONTEND_URL}/confirm-account?code=${verification.code}`;
   const { error } = await sendMail({
     to: user.email,
-    ...getVerifyEmailTemplate(url),
+    ...VerifyEmailTemplate(url),
   });
   if (error) {
     console.log(error);
@@ -176,7 +177,7 @@ export const refreshAccessToken = async (refreshToken: string) => {
 
 export const verifyEmail = async (code: string) => {
   const validCode = await VerificationCodeModel.findOne({
-    _id: code,
+    code,
     type: VerificationCodeType.EmailVerification,
     expiresAt: { $gt: Date.now() },
   });
@@ -190,16 +191,6 @@ export const verifyEmail = async (code: string) => {
   appAssert(updatedUser, INTERNAL_SERVER_ERROR, 'Failed to verify email.');
 
   await validCode.deleteOne();
-
-  /*   const session = await SessionModel.create({
-    userId,
-    userAgent: userAgent,
-    ipAdrresse: ip,
-  }); */
-
-  /*   const sessionId = session._id;
-  const refreshToken = signToken({ sessionId }, refreshTokenSignOptions);
-  const accessToken = signToken({ userId, sessionId }); */
 
   return { user: updatedUser.omit() };
 };
@@ -235,7 +226,7 @@ export const sendPasswordReset = async (email: string) => {
 
   const { data, error } = await sendMail({
     to: user.email,
-    ...getPasswordResetTemplate(url),
+    ...PasswordResetTemplate(url),
   });
   appAssert(
     data?.id,

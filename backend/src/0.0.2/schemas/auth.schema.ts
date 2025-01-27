@@ -3,8 +3,9 @@ import { z } from 'zod';
 export const nameSchema = z.string().trim().min(1).max(100);
 export const emailSchema = z.string().trim().email().min(1).max(100);
 export const passwordSchema = z.string().trim().min(8).max(100);
-export const userAgentSchema = z.string().optional();
-export const ipSchema = z.string().ip();
+export const userAgentSchema = z.string().trim().optional();
+export const ipSchema = z.string().trim().ip();
+export const verificationCodeSchema = z.string().trim().min(1).max(25);
 
 export const registerSchema = z
   .object({
@@ -26,7 +27,9 @@ export const loginSchema = z.object({
   ip: ipSchema,
 });
 
-export const verificationCodeSchema = z.string().min(1).max(24);
+export const verificationEmailSchema = z.object({
+  code: verificationCodeSchema,
+});
 
 export const resetPasswordSchema = z.object({
   password: passwordSchema,
