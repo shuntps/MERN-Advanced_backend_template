@@ -1,8 +1,9 @@
 import AuthProviderType from '../constants/authProviderType';
 import VerificationCodeType from '../constants/verificationCodeType';
 import AppErrorCode from '../constants/appErrorCode';
-import { FRONTEND_URL } from '../constants/env';
+import { FRONTEND_URL, USER_IPS_RETENTION_LIMIT } from '../constants/env';
 import {
+  BAD_REQUEST,
   CONFLICT,
   INTERNAL_SERVER_ERROR,
   NOT_FOUND,
@@ -10,9 +11,12 @@ import {
   UNAUTHORIZED,
 } from '../constants/http';
 
-import { LoginDTO, RegisterDTO } from '../@types/services/auth';
+import {
+  LoginDTO,
+  RegisterDTO,
+  ResetPasswordDTO,
+} from '../@types/services/auth';
 
-import { hashValue } from '../utils/bcrypt';
 import appAssert from '../utils/appAssert';
 import {
   authVerificationCodeExpiresIn,
@@ -53,7 +57,8 @@ export const register = async (registerData: RegisterDTO) => {
     name: name,
     email: email,
     password: password,
-    ipAddresses: [{ ip: ip }],
+    lastIp: ip,
+    ipHistory: [ip],
   });
 
   const userId = user._id;
@@ -65,7 +70,7 @@ export const register = async (registerData: RegisterDTO) => {
     expiresAt,
   });
 
-  const url = `${FRONTEND_URL}/confirm-account?code=${
+  /*   const url = `${FRONTEND_URL}/confirm-account?code=${
     verification.code
   }&exp=${expiresAt.getTime()}`;
 
@@ -75,7 +80,7 @@ export const register = async (registerData: RegisterDTO) => {
   });
   if (error) {
     console.log(error);
-  }
+  } */
 
   return { user: user.omit() };
 };
@@ -83,8 +88,7 @@ export const register = async (registerData: RegisterDTO) => {
 export const login = async (loginData: LoginDTO) => {
   const { email, password, userAgent, ip } = loginData;
 
-  let user = await UserModel.findOne({ email });
-
+  const user = await UserModel.findOne({ email });
   appAssert(
     user && user.provider === AuthProviderType.Email,
     UNAUTHORIZED,
@@ -100,29 +104,34 @@ export const login = async (loginData: LoginDTO) => {
     AppErrorCode.AuthInvalidCredentials
   );
 
-  appAssert(
+  /*   appAssert(
     user.verified,
     UNAUTHORIZED,
     'Email verification is required before logging in, please check your email.',
     AppErrorCode.AuthEmailNotVerified
-  );
+  ); */
 
   // TODO: Check if user enabled 2FA
 
-  const existingIp = user.ipAddresses.find((entry) => entry.ip === ip);
-
-  if (existingIp) {
-    existingIp.updatedAt = new Date();
-  } else {
-    user.ipAddresses.push({ ip, updatedAt: new Date() });
+  if (!user.ipHistory.includes(ip)) {
+    await user.updateOne({
+      $set: {
+        lastIp: ip,
+      },
+      $push: {
+        ipHistory: {
+          $each: [ip],
+          $slice: -USER_IPS_RETENTION_LIMIT,
+        },
+      },
+    });
   }
 
   const userId = user._id;
-
   const session = await SessionModel.create({
     userId,
     userAgent,
-    ipAdrresse: ip,
+    ip: ip,
   });
 
   const sessionId = session._id;
@@ -242,28 +251,59 @@ export const sendPasswordReset = async (email: string) => {
   return { url, emailId: data.id };
 };
 
-export type ResetPasswordParams = {
-  password: string;
-  verificationCode: string;
-};
-
 export const resetPassword = async ({
+  oldPassword,
   password,
   verificationCode,
-}: ResetPasswordParams) => {
+}: ResetPasswordDTO) => {
   const validCode = await VerificationCodeModel.findOne({
-    _id: verificationCode,
+    code: verificationCode,
     type: VerificationCodeType.PasswordReset,
-    expiresAt: { $gt: new Date() },
+    expiresAt: { $gt: Date.now() },
   });
-  appAssert(validCode, NOT_FOUND, 'Invalid or expired verification code.');
+  appAssert(
+    validCode,
+    NOT_FOUND,
+    'Invalid or expired verification code.',
+    AppErrorCode.InvalidOrExpiredVerificationCode
+  );
 
-  const updatedUser = await UserModel.findByIdAndUpdate(validCode.userId, {
-    password: await hashValue(password),
+  const userId = validCode.userId;
+
+  const user = await UserModel.findById(userId);
+  appAssert(
+    user,
+    BAD_REQUEST,
+    'Invalid or expired verification code.',
+    AppErrorCode.InvalidOrExpiredVerificationCode
+  );
+
+  const latestCode = await VerificationCodeModel.findOne({
+    userId,
+    type: VerificationCodeType.PasswordReset,
+  }).sort({ createdAt: -1 });
+  appAssert(
+    latestCode?.code === verificationCode,
+    BAD_REQUEST,
+    'Invalid or expired verification code.',
+    AppErrorCode.InvalidOrExpiredVerificationCode
+  );
+
+  const isOldPasswordValid = await user.comparePassword(oldPassword);
+  appAssert(
+    isOldPasswordValid,
+    BAD_REQUEST,
+    'Invalid old password.',
+    AppErrorCode.AuthInvalidCredentials
+  );
+
+  user.password = password;
+  const updatedUser = await user.save();
+
+  await VerificationCodeModel.deleteMany({
+    userId,
+    type: VerificationCodeType.PasswordReset,
   });
-  appAssert(updatedUser, INTERNAL_SERVER_ERROR, 'Failed to reset password.');
-
-  await validCode.deleteOne();
 
   await SessionModel.deleteMany({ userId: updatedUser._id });
 

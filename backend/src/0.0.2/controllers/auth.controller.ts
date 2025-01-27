@@ -31,7 +31,7 @@ import {
 export const registerHandler = asyncHandler(async (req, res) => {
   const registerData = registerSchema.parse({
     ...req.body,
-    ip: req.ip,
+    ip: req.ip || req.headers['x-forwarded-for'] || '',
   });
 
   const { user } = await register(registerData);
@@ -44,13 +44,11 @@ export const registerHandler = asyncHandler(async (req, res) => {
 export const loginHandler = asyncHandler(async (req, res) => {
   const loginData = loginSchema.parse({
     ...req.body,
-    ip: req.ip,
+    ip: req.ip || req.headers['x-forwarded-for'] || '',
     userAgent: req.headers['user-agent'],
   });
 
-  const { user, refreshToken, accessToken, mfaRequired } = await login(
-    loginData
-  );
+  const { accessToken, refreshToken, user } = await login(loginData);
 
   return setAuthCookies({ res, accessToken, refreshToken })
     .status(OK)
@@ -118,5 +116,5 @@ export const resetPasswordHandler = asyncHandler(async (req, res) => {
 
   return clearAuthCookies(res)
     .status(OK)
-    .json({ message: 'Password reset successful.' });
+    .json({ message: 'Your password has been successfully reset.' });
 });

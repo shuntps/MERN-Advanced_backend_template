@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Response, NextFunction, ErrorRequestHandler } from 'express';
 
-import AppError from '../utils/AppError';
+import AppError from '../../utils/AppError';
 
 export type ErrorHandler<T> = (res: Response, error: T) => void;
 

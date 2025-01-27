@@ -5,14 +5,15 @@ import { verifyToken } from '../utils/jwt';
 
 import { UNAUTHORIZED } from '../constants/http';
 import AppErrorCode from '../constants/appErrorCode';
+import UserModel from '../models/user.models';
+import asyncHandler from './asyncHandler';
 
-const authenticate: RequestHandler = (req, res, next) => {
+const authenticate: RequestHandler = asyncHandler(async (req, res, next) => {
   const accessToken = req.cookies.accessToken as string | undefined;
-
   appAssert(
     accessToken,
     UNAUTHORIZED,
-    'Not authorized.',
+    'Authentication required.',
     AppErrorCode.InvalidAccessToken
   );
 
@@ -26,7 +27,26 @@ const authenticate: RequestHandler = (req, res, next) => {
 
   req.userId = payload.userId;
   req.sessionId = payload.sessionId;
+
+  const clientIp = req.ip || req.headers['x-forwarded-for'] || '';
+
+  const updatedUser = await UserModel.findByIdAndUpdate(
+    req.userId,
+    {
+      lastLoginIp: clientIp,
+      $push: { ipHistory: clientIp },
+    },
+    { new: true }
+  );
+
+  appAssert(
+    updatedUser,
+    UNAUTHORIZED,
+    'Failed to update user IP.',
+    AppErrorCode.InvalidAccessToken
+  );
+
   next();
-};
+});
 
 export default authenticate;

@@ -31,7 +31,18 @@ export const verificationEmailSchema = z.object({
   code: verificationCodeSchema,
 });
 
-export const resetPasswordSchema = z.object({
-  password: passwordSchema,
-  verificationCode: verificationCodeSchema,
-});
+export const resetPasswordSchema = z
+  .object({
+    password: passwordSchema,
+    oldPassword: passwordSchema,
+    confirmPassword: passwordSchema,
+    verificationCode: verificationCodeSchema,
+  })
+  .refine((val) => val.oldPassword !== val.password, {
+    message: 'New password cannot be the same as the old password.',
+    path: ['password'],
+  })
+  .refine((val) => val.password === val.confirmPassword, {
+    message: 'Passwords must match. Please try again.',
+    path: ['confirmPassword'],
+  });

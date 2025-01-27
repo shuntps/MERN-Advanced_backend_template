@@ -2,6 +2,12 @@ import { Document } from 'mongoose';
 
 import AuthProviderType from '../../constants/authProviderType';
 
+export interface IpAddress {
+  ip: string;
+  createdAt?: Date;
+  updatedAt: Date;
+}
+
 export interface UserPreferences {
   enable2FA: boolean;
   emailNotification: boolean;
@@ -14,8 +20,7 @@ export interface UserDocument extends Document {
   password: string;
   verified: boolean;
   provider: AuthProviderType;
-  lastIp: string;
-  ipHistory: string[];
+  ipAddresses: IpAddress[];
   userPreferences: UserPreferences;
   createdAt: Date;
   updatedAt: Date;

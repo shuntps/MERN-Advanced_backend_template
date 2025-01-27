@@ -1,4 +1,4 @@
-import './automations/cleanUserIps';
+// import './automations/cleanUserIps';
 
 import express from 'express';
 import cors from 'cors';

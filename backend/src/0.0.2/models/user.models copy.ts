@@ -4,7 +4,20 @@ import AuthProviderType from '../constants/authProviderType';
 
 import { hashValue, compareValue } from '../utils/bcrypt';
 
-import { UserDocument, UserPreferences } from '../@types/models/user';
+import {
+  IpAddress,
+  UserDocument,
+  UserPreferences,
+} from '../@types/models/user';
+
+const ipAddressSchema = new mongoose.Schema<IpAddress>(
+  {
+    ip: { type: String },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, required: true, default: Date.now },
+  },
+  { _id: false }
+);
 
 const userPreferencesSchema = new mongoose.Schema<UserPreferences>(
   {
@@ -22,8 +35,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
     password: { type: String, required: true },
     verified: { type: Boolean, required: true, default: false },
     provider: { type: String, required: true, default: AuthProviderType.Email },
-    lastIp: { type: String, default: '' },
-    ipHistory: { type: [String], default: [] },
+    ipAddresses: { type: [ipAddressSchema], default: [] },
     userPreferences: { type: userPreferencesSchema, default: {} },
   },
   {
@@ -44,8 +56,7 @@ userSchema.methods.comparePassword = function (val: string) {
 userSchema.set('toJSON', {
   transform: function (doc, ret) {
     delete ret.password;
-    delete ret.lastIp;
-    delete ret.ipHistory;
+    delete ret.ipAddresses;
     delete ret.userPreferences.twoFactorSecret;
     return ret;
   },
@@ -54,9 +65,7 @@ userSchema.set('toJSON', {
 userSchema.methods.omit = function () {
   const user = this.toObject();
   delete user.password;
-  delete user.lastIp;
-  delete user.ipHistory;
-  delete user.userPreferences.twoFactorSecret;
+  delete user.ipAddresses;
   return user;
 };
 

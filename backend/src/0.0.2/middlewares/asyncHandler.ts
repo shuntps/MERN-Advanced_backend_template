@@ -1,4 +1,4 @@
-import { AsyncHandler } from '../@types/middleware';
+import { AsyncHandler } from '../@types/middlewares/asyncHandler';
 
 const asyncHandler: AsyncHandler = (controller) => async (req, res, next) => {
   try {

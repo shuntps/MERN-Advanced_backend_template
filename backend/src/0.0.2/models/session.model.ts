@@ -12,7 +12,7 @@ const sessionSchema = new mongoose.Schema<SessionDocument>({
     index: true,
   },
   userAgent: { type: String },
-  ipAdrresse: { type: String },
+  ip: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date, required: true, default: userSessionExpiresIn },
 });

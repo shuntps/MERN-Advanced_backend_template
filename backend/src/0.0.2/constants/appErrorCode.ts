@@ -5,6 +5,7 @@ const enum AppErrorCode {
   AuthEmailNotVerified = 'AuthEmailNotVerified',
   AuthSessionExpired = 'AuthSessionExpired',
   AuthTooManyRequests = 'AuthTooManyRequests',
+  InvalidOrExpiredVerificationCode = 'InvalidOrExpiredVerificationCode',
   InvalidAccessToken = 'InvalidAccessToken',
 }
 

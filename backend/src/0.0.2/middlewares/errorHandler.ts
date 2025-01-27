@@ -10,7 +10,7 @@ import {
   GlobalErrorHandler,
   SyntaxErrorHandler,
   ZodErrorHandler,
-} from '../@types/error';
+} from '../@types/middlewares/errorHandler';
 
 const handleZodError: ZodErrorHandler = (res, error) => {
   const errors = error.issues.map((err) => ({
