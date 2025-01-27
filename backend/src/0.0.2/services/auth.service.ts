@@ -37,7 +37,6 @@ import {
 import UserModel from '../models/user.models';
 import SessionModel from '../models/session.model';
 import VerificationCodeModel from '../models/verificationCode.model';
-import { generateUniqueCode } from '../utils/uuid';
 
 export const register = async (registerData: RegisterDTO) => {
   const { name, email, password, ip } = registerData;
