@@ -10,11 +10,6 @@ import {
   UNAUTHORIZED,
 } from '../constants/http';
 
-import {
-  PasswordResetTemplate,
-  VerifyEmailTemplate,
-} from '../mailers/templates/emailTemplates';
-
 import { LoginDTO, RegisterDTO } from '../@types/services/auth';
 
 import { hashValue } from '../utils/bcrypt';
@@ -34,10 +29,15 @@ import {
 } from '../utils/jwt';
 
 import { sendMail } from '../mailers/sendMail';
+import {
+  passwordResetTemplate,
+  verifyEmailTemplate,
+} from '../mailers/templates/emailTemplates';
 
 import UserModel from '../models/user.models';
 import SessionModel from '../models/session.model';
 import VerificationCodeModel from '../models/verificationCode.model';
+import { generateUniqueCode } from '../utils/uuid';
 
 export const register = async (registerData: RegisterDTO) => {
   const { name, email, password, ip } = registerData;
@@ -59,17 +59,20 @@ export const register = async (registerData: RegisterDTO) => {
 
   const userId = user._id;
 
+  const expiresAt = authVerificationCodeExpiresIn();
   const verification = await VerificationCodeModel.create({
     userId,
     type: VerificationCodeType.EmailVerification,
-    expiresAt: authVerificationCodeExpiresIn(),
+    expiresAt,
   });
 
-  // Send verification email
-  const url = `${FRONTEND_URL}/confirm-account?code=${verification.code}`;
+  const url = `${FRONTEND_URL}/confirm-account?code=${
+    verification.code
+  }&exp=${expiresAt.getTime()}`;
+
   const { error } = await sendMail({
     to: user.email,
-    ...VerifyEmailTemplate(url),
+    ...verifyEmailTemplate(url),
   });
   if (error) {
     console.log(error);
@@ -154,7 +157,8 @@ export const refreshAccessToken = async (refreshToken: string) => {
   appAssert(
     session && session.expiresAt.getTime() > now,
     UNAUTHORIZED,
-    'Session expired or invalid. Please log in again.'
+    'Session expired or invalid. Please log in again.',
+    AppErrorCode.AuthSessionExpired
   );
 
   const userId = session.userId;
@@ -197,36 +201,38 @@ export const verifyEmail = async (code: string) => {
 
 export const sendPasswordReset = async (email: string) => {
   const user = await UserModel.findOne({ email });
-  appAssert(user, NOT_FOUND, 'User not found.');
+  appAssert(user, NOT_FOUND, 'User not found.', AppErrorCode.AuthUserNotFound);
 
   const userId = user._id;
 
-  const fiveMinAgo = fiveMinutesAgo();
+  const timeAgo = fiveMinutesAgo();
+  const maxAttemps = 1;
   const count = await VerificationCodeModel.countDocuments({
     userId,
     type: VerificationCodeType.PasswordReset,
-    createdAt: { $gt: fiveMinAgo },
+    createdAt: { $gt: timeAgo },
   });
   appAssert(
-    count <= 1,
+    count <= maxAttemps,
     TOO_MANY_REQUESTS,
-    'Too many requests, please try again later.'
+    'Too many requests, please try again later.',
+    AppErrorCode.AuthTooManyRequests
   );
 
   const expiresAt = passwordResetCodeExpiresIn();
-  const verificationCode = await VerificationCodeModel.create({
+  const verification = await VerificationCodeModel.create({
     userId,
     type: VerificationCodeType.PasswordReset,
     expiresAt,
   });
 
-  const url = `${FRONTEND_URL}/password/reset?code=${
-    verificationCode._id
+  const url = `${FRONTEND_URL}/reset-password?code=${
+    verification.code
   }&exp=${expiresAt.getTime()}`;
 
   const { data, error } = await sendMail({
     to: user.email,
-    ...PasswordResetTemplate(url),
+    ...passwordResetTemplate(url),
   });
   appAssert(
     data?.id,

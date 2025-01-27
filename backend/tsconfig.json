@@ -108,6 +108,10 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "include": ["src/**/*.ts", "@types"],
+  "include": [
+    "src/**/*.ts",
+    "@types",
+    "src/0.0.2/mailers/templates/emailTemplates.ts.bak"
+  ],
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts", "src/0.0.1"]
 }

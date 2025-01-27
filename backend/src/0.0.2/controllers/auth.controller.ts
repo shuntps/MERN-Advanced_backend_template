@@ -106,7 +106,9 @@ export const sendPasswordResetHandler = asyncHandler(async (req, res) => {
 
   await sendPasswordReset(email);
 
-  return res.status(OK).json({ message: 'Password reset email sent.' });
+  return res.status(OK).json({
+    message: 'A password reset email has been sent to your inbox.',
+  });
 });
 
 export const resetPasswordHandler = asyncHandler(async (req, res) => {
