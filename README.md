@@ -1,18 +1,25 @@
 # MERN-Advanced_backend_template
 
-This is the backend of a MERN authentication application, developed with Express.js and TypeScript. It handles user authentication using JWT, password hashing, and other essential features for secure user management.
+This is the backend of a MERN authentication application, developed with Express.js and TypeScript. It provides robust user authentication, secure session handling, and various advanced features such as IP tracking, email validation, and cron jobs.
 
 ## Features
 
-- User authentication with JWT.
-- Password hashing using `bcryptjs`.
-- Environment variable management with `dotenv`.
-- CORS enabled for secure cross-origin requests.
-- MongoDB integration with `mongoose`.
-- Email handling with `resend`.
-- Input validation using `zod`.
-- Scheduled tasks with `node-cron`.
-- Cookie management using `cookie-parser`.
+- **User Authentication**:
+  - Secure login with JWT.
+  - Password hashing using `bcryptjs`.
+  - Refresh tokens stored in cookies for secure session management.
+- **Data Validation**:
+  - Input validation using `zod` schemas.
+- **Database**:
+  - MongoDB integration using `mongoose`.
+  - IP tracking with history management (limited to 5 most recent IPs).
+- **Email Handling**:
+  - Email sending and verification using `resend`.
+- **Scheduled Tasks**:
+  - Cron jobs powered by `node-cron` for automated tasks (e.g., cleaning expired sessions).
+- **Security Features**:
+  - CORS enabled for secure cross-origin requests.
+  - Environment variable management with `dotenv`.
 
 ## Requirements
 
@@ -60,33 +67,40 @@ This is the backend of a MERN authentication application, developed with Express
 backend/
 ├── src/
 │   └── 0.0.2/
-│       └── index.ts  # Entry point of the application
-├── .env.example       # Example environment variables
-├── package.json       # Project dependencies and scripts
-├── tsconfig.json      # TypeScript configuration
-└── README.md          # Project documentation
+│       ├── index.ts          # Entry point of the application
+│       ├── controllers/      # Contains route logic (e.g., auth.controller.ts)
+│       ├── middlewares/      # Custom middlewares (e.g., errorHandler.ts)
+│       ├── models/           # Mongoose models (e.g., user.models.ts)
+│       ├── schemas/          # Zod validation schemas (e.g., auth.schema.ts)
+│       ├── services/         # Business logic (e.g., auth.service.ts)
+│       └── constants/        # App constants (e.g., error codes)
+├── .env.example              # Example environment variables
+├── package.json              # Project dependencies and scripts
+├── tsconfig.json             # TypeScript configuration
+└── README.md                 # Project documentation
 ```
 
 ## Dependencies
 
-### Main
+### Main Dependencies
 
-- **bcryptjs**: Password hashing.
+- **bcryptjs**: For password hashing.
 - **cookie-parser**: Parse cookies for session management.
 - **cors**: Enable Cross-Origin Resource Sharing.
 - **dotenv**: Manage environment variables.
-- **express**: Web framework for the server.
-- **jsonwebtoken**: Generate and verify JWTs.
-- **mongoose**: MongoDB object modeling.
+- **express**: Web framework for building APIs.
+- **jsonwebtoken**: Handle JWT creation and verification.
+- **mongoose**: MongoDB object modeling tool.
 - **node-cron**: Schedule recurring tasks.
-- **resend**: Handle email operations.
-- **zod**: Schema-based validation.
+- **resend**: Send and handle email operations.
+- **uuid**: Generate unique identifiers.
+- **zod**: Perform schema-based data validation.
 
-### Dev
+### Development Dependencies
 
-- **TypeScript**: Type-safe JavaScript.
-- **ts-node-dev**: Run TypeScript with hot-reloading in development.
-- **@types/...**: Type definitions for TypeScript.
+- **TypeScript**: A strongly typed programming language for JavaScript.
+- **ts-node-dev**: Run TypeScript with hot-reloading for development.
+- **@types/...**: TypeScript type definitions for various dependencies.
 
 ## License
 

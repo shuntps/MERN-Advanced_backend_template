@@ -252,7 +252,6 @@ export const sendPasswordReset = async (email: string) => {
 };
 
 export const resetPassword = async ({
-  oldPassword,
   password,
   verificationCode,
 }: ResetPasswordDTO) => {
@@ -270,14 +269,6 @@ export const resetPassword = async ({
 
   const userId = validCode.userId;
 
-  const user = await UserModel.findById(userId);
-  appAssert(
-    user,
-    BAD_REQUEST,
-    'Invalid or expired verification code.',
-    AppErrorCode.InvalidOrExpiredVerificationCode
-  );
-
   const latestCode = await VerificationCodeModel.findOne({
     userId,
     type: VerificationCodeType.PasswordReset,
@@ -289,16 +280,10 @@ export const resetPassword = async ({
     AppErrorCode.InvalidOrExpiredVerificationCode
   );
 
-  const isOldPasswordValid = await user.comparePassword(oldPassword);
-  appAssert(
-    isOldPasswordValid,
-    BAD_REQUEST,
-    'Invalid old password.',
-    AppErrorCode.AuthInvalidCredentials
-  );
-
-  user.password = password;
-  const updatedUser = await user.save();
+  const updatedUser = await UserModel.findByIdAndUpdate(userId, {
+    password,
+  });
+  appAssert(updatedUser, BAD_REQUEST, 'Failed to reset password.');
 
   await VerificationCodeModel.deleteMany({
     userId,

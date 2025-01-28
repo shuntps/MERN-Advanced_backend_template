@@ -23,6 +23,5 @@ export type LoginDTO = {
 
 export type ResetPasswordDTO = {
   password: string;
-  oldPassword: string;
   verificationCode: string;
 };
