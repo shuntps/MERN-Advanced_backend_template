@@ -8,6 +8,12 @@ export interface UserPreferences {
   twoFactorSecret?: string;
 }
 
+export interface IpHistoryItem {
+  ip: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface UserDocument extends Document {
   name: string;
   email: string;
@@ -15,7 +21,7 @@ export interface UserDocument extends Document {
   verified: boolean;
   provider: AuthProviderType;
   lastIp: string;
-  ipHistory: string[];
+  ipHistory: IpHistoryItem[];
   userPreferences: UserPreferences;
   createdAt: Date;
   updatedAt: Date;

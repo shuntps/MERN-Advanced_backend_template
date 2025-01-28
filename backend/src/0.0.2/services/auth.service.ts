@@ -1,7 +1,7 @@
 import AuthProviderType from '../constants/authProviderType';
 import VerificationCodeType from '../constants/verificationCodeType';
 import AppErrorCode from '../constants/appErrorCode';
-import { FRONTEND_URL, USER_IPS_RETENTION_LIMIT } from '../constants/env';
+import { FRONTEND_URL } from '../constants/env';
 import {
   BAD_REQUEST,
   CONFLICT,
@@ -41,6 +41,7 @@ import {
 import UserModel from '../models/user.models';
 import SessionModel from '../models/session.model';
 import VerificationCodeModel from '../models/verificationCode.model';
+import updateUserIp from '../utils/updateUserIp';
 
 export const register = async (registerData: RegisterDTO) => {
   const { name, email, password, ip } = registerData;
@@ -58,7 +59,7 @@ export const register = async (registerData: RegisterDTO) => {
     email: email,
     password: password,
     lastIp: ip,
-    ipHistory: [ip],
+    ipHistory: [{ ip: ip }],
   });
 
   const userId = user._id;
@@ -113,19 +114,7 @@ export const login = async (loginData: LoginDTO) => {
 
   // TODO: Check if user enabled 2FA
 
-  if (!user.ipHistory.includes(ip)) {
-    await user.updateOne({
-      $set: {
-        lastIp: ip,
-      },
-      $push: {
-        ipHistory: {
-          $each: [ip],
-          $slice: -USER_IPS_RETENTION_LIMIT,
-        },
-      },
-    });
-  }
+  await updateUserIp(user, ip);
 
   const userId = user._id;
   const session = await SessionModel.create({

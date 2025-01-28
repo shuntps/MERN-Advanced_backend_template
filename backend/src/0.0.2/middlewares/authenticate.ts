@@ -2,11 +2,16 @@ import { RequestHandler } from 'express';
 
 import appAssert from '../utils/appAssert';
 import { verifyToken } from '../utils/jwt';
+import updateUserIp from '../utils/updateUserIp';
 
 import { UNAUTHORIZED } from '../constants/http';
 import AppErrorCode from '../constants/appErrorCode';
-import UserModel from '../models/user.models';
+
 import asyncHandler from './asyncHandler';
+
+import { ipSchema } from '../schemas/auth.schema';
+
+import UserModel from '../models/user.models';
 
 const authenticate: RequestHandler = asyncHandler(async (req, res, next) => {
   const accessToken = req.cookies.accessToken as string | undefined;
@@ -28,23 +33,20 @@ const authenticate: RequestHandler = asyncHandler(async (req, res, next) => {
   req.userId = payload.userId;
   req.sessionId = payload.sessionId;
 
-  const clientIp = req.ip || req.headers['x-forwarded-for'] || '';
-
-  const updatedUser = await UserModel.findByIdAndUpdate(
-    req.userId,
-    {
-      lastLoginIp: clientIp,
-      $push: { ipHistory: clientIp },
-    },
-    { new: true }
-  );
-
+  const user = await UserModel.findById(req.userId);
   appAssert(
-    updatedUser,
+    user,
     UNAUTHORIZED,
-    'Failed to update user IP.',
+    'Invalid access token.',
     AppErrorCode.InvalidAccessToken
   );
+
+  const clientIp = (req.ip || req.headers['x-forwarded-for'] || '').toString();
+  const ip = ipSchema.safeParse(clientIp);
+
+  if (ip.success) {
+    await updateUserIp(user, clientIp);
+  }
 
   next();
 });

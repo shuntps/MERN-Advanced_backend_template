@@ -15,6 +15,15 @@ const userPreferencesSchema = new mongoose.Schema<UserPreferences>(
   { _id: false }
 );
 
+const ipHistorySchema = new mongoose.Schema(
+  {
+    ip: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const userSchema = new mongoose.Schema<UserDocument>(
   {
     name: { type: String, required: true },
@@ -23,7 +32,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
     verified: { type: Boolean, required: true, default: false },
     provider: { type: String, required: true, default: AuthProviderType.Email },
     lastIp: { type: String, default: '' },
-    ipHistory: { type: [String], default: [] },
+    ipHistory: { type: [ipHistorySchema], default: [] },
     userPreferences: { type: userPreferencesSchema, default: {} },
   },
   {
